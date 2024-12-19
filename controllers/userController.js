@@ -5,10 +5,10 @@ const mysql = require("mysql");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "123456",
-  database: "ExpressIntegration",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
 });
 connection.connect((err) => {
   if (err) {
@@ -20,12 +20,17 @@ connection.connect((err) => {
 const insertUser = async (req, res) => {
   try {
     const { name, email, password, id } = req.body;
-    connection.query("SELECT * FROM users WHERE email = ?",[email],async (error, results) => {
+    connection.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email],
+      async (error, results) => {
         if (error) {
           throw error;
         }
         if (results.length > 0 && !id) {
-          return res.status(400).json({ success: false, message: "Email already exists" });
+          return res
+            .status(400)
+            .json({ success: false, message: "Email already exists" });
         }
         let hashedPassword = password;
         if (password) {
@@ -49,12 +54,20 @@ const insertUser = async (req, res) => {
         connection.query(query, cond, (err) => {
           if (err) {
             if (err.code === "ER_DUP_ENTRY") {
-              return res.status(400).json({ success: false, message: "Email already exists" });
+              return res
+                .status(400)
+                .json({ success: false, message: "Email already exists" });
             }
             throw err;
           }
-          res.status(200).json({success: true,message: id? "User updated successfully": "User inserted successfully",
-          });
+          res
+            .status(200)
+            .json({
+              success: true,
+              message: id
+                ? "User updated successfully"
+                : "User inserted successfully",
+            });
         });
       }
     );
